@@ -8,7 +8,7 @@ import cv2
 # ---------- #
 # READ IMAGE #
 # ---------- #
-path='../example/ente2.jpg' 
+path='../example/ente.jpg' 
 img_original =cv2.imread(path)
 img_original = cv2.cvtColor(img_original, cv2.COLOR_BGR2GRAY)
 img_original = cv2.resize(img_original, (512, 512))
@@ -22,8 +22,13 @@ img_fourier = fftshift(fft2(img_original))
 # MASK #
 # ---- #
 img_masked = img_fourier.copy()
-img_masked[252:260, 0:252] = 1
-img_masked[252:260, 260:512] = 1
+# Gerade Linie => Viel Maskiert, andere Artefakte entstehen
+#img_masked[252:260, 0:252] = 1
+#img_masked[252:260, 260:512] = 1
+# Kleine Bereiche maskiert, relativ gute Filterung
+img_masked[256, 238:242] = 1
+img_masked[256, 270:275] = 1
+
 
 # -------------- #
 # INVERT FOURIER #
