@@ -3,8 +3,8 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-QUALITY_STEPS = [5, 25, 50, 75, 95]
-IMAGE_PATH = 'example/reh.png'
+QUALITY_STEPS = [5, 25, 50, 75, 95] # TODO: Anpassen
+IMAGE_PATH = 'example/reh.png' # TODO: Anpassen
 
 # Load .png image
 img = cv2.imread(IMAGE_PATH)
