@@ -17,8 +17,8 @@ histogram = np.zeros(256)
 height=len(img[0])
 width=len(img)
 
-for i in range(width-1):
-  for j in range(height-1):
+for i in range(width):
+  for j in range(height):
     histogram[ img[i][j] ] += 1
 
 # -------- #
