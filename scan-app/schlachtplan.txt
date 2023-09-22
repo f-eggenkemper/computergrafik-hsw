@@ -1,0 +1,9 @@
+Einlesen
+Erkennung von Kanten um das Blatt
+Freilegen
+Rotation + Perspektivkorrektur
+Erosion von Fehlern
+Binarisieren
+Nachbearbeitung durch Nutzer (GUI)
+Matplot-Darstellung der einzelnen Schritte (Debugging)
+Speichern als PDF
