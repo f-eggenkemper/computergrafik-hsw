@@ -4,14 +4,27 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
 
+from matplotlib.widgets import RadioButtons
+from matplotlib.widgets import Button, Slider
+
+
 imagesArray = []
 titlesArray = []
-
+Axes = 0
 
 def plot_images(images, titles):
-    fig, axes = plt.subplots(len(images), len(images[0]), sharex=True, sharey=True)
-
-    for i, axes2 in enumerate(axes):
+    fig, axes = plt.subplots(len(images) + 1, len(images[0]), sharex=False, sharey=False)
+    fig.tight_layout()
+    Axes = axes
+    radio = RadioButtons(axes[len(axes)-1][0], ('Color', 'Grayscale', 'Binary'))
+    radio.on_clicked(button_func)
+    req_slider = Slider(
+        ax=axes[len(axes) - 1][1],
+        label='Frequency [Hz]',
+        valmin=0.1,
+        valmax=30,
+        valinit=10,)
+    for i, axes2 in enumerate(axes[0:len(axes)-1]):
         axes2[0].set_ylabel(titles[i], rotation=90)
 
         for j, key in enumerate(images[0]):
@@ -20,8 +33,21 @@ def plot_images(images, titles):
         for img, ax in zip(images[i].values(), axes2):
             #ax.tick_params(axis='both', which='both', left=False, bottom=False, labelleft=False, labelbottom=False)
             ax.imshow(img, cmap=cm.gray)
-
     plt.show()
+
+
+def button_func(label):
+    plt.close()
+    if (label == 'Color'):
+        for img in imagesArray:
+            img['result'] = img['cropped']
+    elif (label == 'Grayscale'):
+        for img in imagesArray:
+            img['result'] = grayscale_image(img['cropped'])
+    elif (label == 'Binary'):
+        for img in imagesArray:
+            img['result'] = binarize_image(grayscale_image(img['cropped']))
+    plot_images(imagesArray, titlesArray)
 
 
 def gen_images(path):
@@ -49,7 +75,7 @@ def do_closing_operation(img):
 
 
 def binarize_image(img):
-    img_binarized = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 41, 2)
+    img_binarized = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 41, 2)
     return img_binarized
 
 
@@ -65,13 +91,23 @@ def add_bounding_box(img, img_original):
     img_bounding_box = cv2.rectangle(img_original.copy(), (x, y), (x + w, y + h), (255, 0, 0), 10)
     return img_bounding_box
 
+def reduce_points(points, shape, corner_threshold = 200):
+    width = shape[1]
+    height = shape[0]
+    ret_points = np.empty(4, dtype=object)
+    ret_points[0] = next((point for point in points if (point[0][0] <= corner_threshold and point[0][1] <= corner_threshold)),[[0, 0]])
+    ret_points[1] = next((point for point in points if (point[0][0] <= corner_threshold and point[0][1] >= (height - corner_threshold))),[[0, height]])
+    ret_points[2] = next((point for point in points if (point[0][0] >= (width - corner_threshold) and point[0][1] >= (height - corner_threshold))), [[width, height]])
+    ret_points[3] = next((point for point in points if (point[0][0] >= (width - corner_threshold) and point[0][1] <= corner_threshold)), [[width, 0]])
+    return ret_points
 
 def draw_contours(img, img_original):
     img_contours = img_original.copy()
     contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     c = max(contours, key=cv2.contourArea)
-    epsilon = 0.1*cv2.arcLength(c,True)
+    epsilon = 0.05*cv2.arcLength(c,True)
     approx = cv2.approxPolyDP(c, epsilon, True)
+    approx = reduce_points(approx, img_original.shape)
     for i in approx:
         cv2.circle(img_contours, i[0], 15, (255,0,0), -1)
     return img_contours, approx
@@ -81,14 +117,14 @@ def draw_hough_lines(img_binarized, img_original):
     img = img_original.copy()
     for i in range(0, len(linesArray)):
         l = linesArray[i][0]
-        cv2.line(img, (l[0], l[1]), (l[2], l[3]), (255), cv2.LINE_AA)
+        cv2.line(img, (l[0], l[1]), (l[2], l[3]), (255), lineType=cv2.LINE_4)
     return img
 
 def perspective_transformation(img, points):
     img_transformed = img.copy()
-    pts1 = np.float32([[points[0][0],points[1][0],points[2][0],points[3][0]]])
     width = img.shape[1]
     height = img.shape[0]
+    pts1 = np.float32([[points[0][0],points[1][0],points[2][0],points[3][0]]])
     pts2 = np.float32([[0,0], [0,height], [width,height], [width, 0]])
     M = cv2.getPerspectiveTransform(pts1,pts2)
     dst = cv2.warpPerspective(img_transformed,M,(width,height))
@@ -105,12 +141,13 @@ def apply_effects(img_original):
 
     return {
         "original": img_original,
-        "grayscale": img_grayscale,
-        "blurred": img_blurred,
-        "closed": img_closed,
-        "binarized": img_binarized,
-        "lines": img_lines,
-        "contours": img_contours,
+        #"grayscale": img_grayscale,
+        #"blurred": img_blurred,
+        #"closed": img_closed,
+        #"binarized": img_binarized,
+        #"lines": img_lines,
+        #"contours": img_contours,
+        "cropped" : img_perspective,
         "result" : img_perspective
     }
 

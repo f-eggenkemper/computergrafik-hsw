@@ -4,6 +4,6 @@ Freilegen
 Rotation + Perspektivkorrektur
 Erosion von Fehlern
 Binarisieren
-Nachbearbeitung durch Nutzer (GUI)
 Matplot-Darstellung der einzelnen Schritte (Debugging)
+Nachbearbeitung durch Nutzer (GUI)
 Speichern als PDF
