@@ -10,20 +10,44 @@ from matplotlib.widgets import Button, Slider
 
 imagesArray = []
 titlesArray = []
-Axes = 0
 
-def plot_images(images, titles):
-    fig, axes = plt.subplots(len(images) + 1, len(images[0]), sharex=False, sharey=False)
+def plot(images, titles):
+    fig, axes = plt.subplots(len(images) + 1, len(images[0]), sharex=False, sharey=False, gridspec_kw={'height_ratios': [3, 1]})
     fig.tight_layout()
-    Axes = axes
+
+    # Color Mode
+    axes[len(axes)-1][0].set_title('Color Mode')
+    axes[len(axes)-1][0].axis('off')
     radio = RadioButtons(axes[len(axes)-1][0], ('Color', 'Grayscale', 'Binary'))
-    radio.on_clicked(button_func)
-    req_slider = Slider(
+    radio.on_clicked(lambda label: change_color_mode(label, axes, fig))
+
+    # Helligkeit
+    helligkeit_slider = Slider(
         ax=axes[len(axes) - 1][1],
-        label='Frequency [Hz]',
+        label='Kontrast',
         valmin=0.1,
-        valmax=30,
-        valinit=10,)
+        valmax=3.0,
+        valinit=1.0,
+        valstep=0.1
+        )
+    helligkeit_slider.on_changed(lambda val: change_contrast(val, axes, fig))
+    
+    # Kontrast
+    kontrast_slider = Slider(
+        ax=axes[len(axes) - 1][2],
+        label='Helligkeit',
+        valmin=1,
+        valmax=100,
+        valinit=50,
+        valstep=1
+        )
+    kontrast_slider.on_changed(lambda val: change_brightness(val, axes, fig))
+    
+    plot_images(images, titles, axes)
+
+    plt.show()
+
+def plot_images(images, titles, axes):
     for i, axes2 in enumerate(axes[0:len(axes)-1]):
         axes2[0].set_ylabel(titles[i], rotation=90)
 
@@ -32,12 +56,11 @@ def plot_images(images, titles):
 
         for img, ax in zip(images[i].values(), axes2):
             #ax.tick_params(axis='both', which='both', left=False, bottom=False, labelleft=False, labelbottom=False)
+            ax.clear()
             ax.imshow(img, cmap=cm.gray)
-    plt.show()
 
 
-def button_func(label):
-    plt.close()
+def change_color_mode(label, axes, fig):
     if (label == 'Color'):
         for img in imagesArray:
             img['result'] = img['cropped']
@@ -46,12 +69,29 @@ def button_func(label):
             img['result'] = grayscale_image(img['cropped'])
     elif (label == 'Binary'):
         for img in imagesArray:
-            img['result'] = binarize_image(grayscale_image(img['cropped']))
-    plot_images(imagesArray, titlesArray)
+            img['result'] = cv2.adaptiveThreshold(grayscale_image(img['cropped']), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 15)
+    plot_images(imagesArray, titlesArray, axes)
+
+    fig.canvas.draw_idle()
+
+def change_brightness(val, axes, fig):
+    for img in imagesArray:
+        img['result'] = cv2.convertScaleAbs(img['cropped'], beta=val)
+    plot_images(imagesArray, titlesArray, axes)
+    fig.canvas.draw_idle()
+
+def change_contrast(val, axes, fig):
+    for img in imagesArray:
+        img['result'] = cv2.convertScaleAbs(img['cropped'], alpha=val)
+    plot_images(imagesArray, titlesArray, axes)
+    fig.canvas.draw_idle()
 
 
-def gen_images(path):
-    for img_file in os.listdir(path):
+def gen_images(path, idx = -1):
+    if (idx != -1):
+        list = [os.listdir(path)[idx]]
+
+    for img_file in list:
         img = cv2.imread(os.path.join(path, img_file))
         img = cv2.resize(img, (0,0), fx=0.25, fy=0.25)
         imagesArray.append(apply_effects(img))
@@ -153,5 +193,5 @@ def apply_effects(img_original):
 
 
 if __name__ == "__main__":
-    gen_images("./examples/")
-    plot_images(imagesArray, titlesArray)
+    gen_images("./examples/", idx = 1)
+    plot(imagesArray, titlesArray)
