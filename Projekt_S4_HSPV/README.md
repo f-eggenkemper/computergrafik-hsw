@@ -5,7 +5,7 @@ Begleitmaterial zum WPF Computergrafik an der HSPV S4
 
 - Bild einlesen
 - Kanten erkennen
-  - Obejkterkennung
+  - Objekterkennung
 - Segmentieren
 - Filter auf Bildteile
 - Bilder zusammenfügen
