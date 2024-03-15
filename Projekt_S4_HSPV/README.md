@@ -20,3 +20,11 @@ Begleitmaterial zum WPF Computergrafik an der HSPV S4
   - opencv: *"pip install opencv-python"*
   - numpy: *"pip install numpy"* (schon in opencv)
 
+# Ideen
+
+- Begrenzung:
+  - Ein Objekt
+  - Zentriert
+  - Abstand zum Rand etc.
+- Blurren dann Kantenfilter?
+
