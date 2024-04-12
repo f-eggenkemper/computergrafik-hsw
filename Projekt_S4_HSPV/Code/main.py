@@ -2,15 +2,24 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from pygments.formatters import img
+from matplotlib.widgets import Slider 
 
 path = "../Images/Thermobecher.jpg"
 image_BGR = cv2.imread(path)
 image_RGB = cv2.cvtColor(image_BGR, cv2.COLOR_BGR2RGB)
 
+# Variable Blurr Standardwert
+user_input = int(input("Geben Sie den Blurr Wert ein: "))
+if user_input % 2 == 0:
+    user_input += 1
+blurr_wert = user_input
+
+
+
 # Methode um Bilder darzustellen
 
 
-def plot_single_image(image_dict):
+def plot_single_image(image_dict,):
     #Dictionary{"title":title, "image":img}
     plt.imshow(image_dict["image"], cmap="gray")
     plt.title(image_dict["title"])
@@ -20,6 +29,9 @@ def plot_single_image(image_dict):
 def plot_images(img_arr):
     # img_arr = [original, binär, blurr, kanten]
     # original = Dictionary{"title":title, "image":img}
+    
+    
+    
     if len(img_arr) == 0:
         print("No images")
         return
@@ -30,11 +42,13 @@ def plot_images(img_arr):
 
     fig, ax = plt.subplots(1, len(img_arr), sharex=True, sharey=True)
     
+    
+    
     for i in range(0, len(img_arr)):
         ax[i].axis("off")
         ax[i].imshow(img_arr[i]["image"], cmap="gray")
         ax[i].set_title(img_arr[i]["title"])
-
+    
     plt.show()
 
 
@@ -45,9 +59,9 @@ def create_original_image(image):
 
     return original_image_dictionary
 
-def create_image_blurred(image):
+def create_image_blurred(image, x):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image_blurred = cv2.GaussianBlur(image, (111, 111), 0)
+    image_blurred = cv2.GaussianBlur(image, (x, x), 0)
     image_blurred_dictionary = {"title": "Blurred Image", "image": image_blurred}
     return image_blurred_dictionary
 
@@ -94,7 +108,7 @@ def create_closed_mask(mask):
 
 def create_inpainted_image(image, mask):
     image_inpainted = image.copy()
-    image_inpainted = cv2.inpaint(image_inpainted, mask, 30, cv2.INPAINT_TELEA)
+    image_inpainted = cv2.inpaint(image_inpainted, mask, 3, cv2.INPAINT_TELEA)
     image_inpainted_dictionary = {"title": "Inpainted Image", "image": image_inpainted}
     return image_inpainted_dictionary
 
@@ -109,7 +123,7 @@ image_closed = image_closed["image"]
 image_inpaint = create_inpainted_image(image_BGR, image_masked)
 image_inpaint = image_inpaint["image"]
 #image_blurred = create_image_blurred(image_cut)
-image_blurred = create_image_blurred(image_inpaint)
+image_blurred = create_image_blurred(image_inpaint, blurr_wert)
 image_blurred = image_blurred["image"]
 
 
@@ -118,7 +132,7 @@ image_array.append(create_original_image(image_BGR))
 #image_array.append(grabcut_image(image_RGB))
 #image_array.append(create_dilated_mask(image_masked))
 #image_array.append(image_merge(image_RGB,image_blurred,image_dilated))
-image_array.append(create_inpainted_image(image_RGB, image_masked))
+#image_array.append(create_inpainted_image(image_RGB, image_masked))
 image_array.append(image_merge(image_RGB,image_blurred,image_closed))
 #image_array.append(image_cut_before(image_RGB, image_masked))
 
