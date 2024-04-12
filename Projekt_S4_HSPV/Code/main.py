@@ -47,8 +47,7 @@ def create_original_image(image):
 
 def create_image_blurred(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image_blurred = cv2.GaussianBlur(image, (111, 111
-                                             ), 0)
+    image_blurred = cv2.GaussianBlur(image, (111, 111), 0)
     image_blurred_dictionary = {"title": "Blurred Image", "image": image_blurred}
     return image_blurred_dictionary
 
@@ -72,26 +71,49 @@ def image_merge(image_original, image_blurred, mask):
     image_merged_dictionary = {"title": "Merged Image", "image" : image_merged}
     return image_merged_dictionary
 
+def image_cut_before(image, mask):
+    image_cut = image.copy()
+    for x in range (image_cut.shape[0]):
+        for y in range (image_cut.shape[1]):
+            if mask[x][y] == 1:
+                image_cut[x][y] = [158,158,158]
+    image_cut_dictionary = {"title": "Cut Image", "image" : image_cut}
+    return image_cut_dictionary
+
 def create_dilated_mask(mask):
     dilated_mask = mask.copy()
     dilated_mask = cv2.dilate(dilated_mask, kernel=np.ones((5, 5), np.uint8), iterations=3)
     image_dilated_dictionary = {"title": "Dilated Image", "image": dilated_mask}
     return image_dilated_dictionary
 
+def create_closed_mask(mask):
+    closed_mask = mask.copy()
+    closed_mask = cv2.morphologyEx(closed_mask, cv2.MORPH_CLOSE, kernel=np.ones((5, 5), np.uint8), iterations=3)
+    image_closed_dictionary = {"title": "Closed Image", "image": closed_mask}
+    return image_closed_dictionary
 
+#def create_inpainted_image(image, mask):
+    
+    
 
-image_blurred = create_image_blurred(image_BGR)
-image_blurred = image_blurred["image"]
 image_masked = grabcut_image(image_RGB)
 image_masked = image_masked["image"]
-image_dilated = create_dilated_mask(image_masked)
-image_dilated = image_dilated["image"]
+#image_dilated = create_dilated_mask(image_masked)
+image_closed = create_closed_mask(image_masked)
+#image_dilated = image_dilated["image"]
+image_closed = image_closed["image"]
+image_cut = image_cut_before(image_BGR, image_masked)
+image_cut = image_cut["image"]
+image_blurred = create_image_blurred(image_cut)
+image_blurred = image_blurred["image"]
 
 
 image_array = []
 image_array.append(create_original_image(image_BGR))
-image_array.append(grabcut_image(image_RGB))
-image_array.append(create_dilated_mask(image_masked))
-image_array.append(image_merge(image_RGB,image_blurred,image_dilated))
+#image_array.append(grabcut_image(image_RGB))
+#image_array.append(create_dilated_mask(image_masked))
+#image_array.append(image_merge(image_RGB,image_blurred,image_dilated))
+image_array.append(image_merge(image_RGB,image_blurred,image_closed))
+#image_array.append(image_cut_before(image_RGB, image_masked))
 
 plot_images(image_array)
