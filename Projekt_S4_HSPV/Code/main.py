@@ -92,9 +92,11 @@ def create_closed_mask(mask):
     image_closed_dictionary = {"title": "Closed Image", "image": closed_mask}
     return image_closed_dictionary
 
-#def create_inpainted_image(image, mask):
-    
-    
+def create_inpainted_image(image, mask):
+    image_inpainted = image.copy()
+    image_inpainted = cv2.inpaint(image_inpainted, mask, 30, cv2.INPAINT_TELEA)
+    image_inpainted_dictionary = {"title": "Inpainted Image", "image": image_inpainted}
+    return image_inpainted_dictionary
 
 image_masked = grabcut_image(image_RGB)
 image_masked = image_masked["image"]
@@ -102,9 +104,12 @@ image_masked = image_masked["image"]
 image_closed = create_closed_mask(image_masked)
 #image_dilated = image_dilated["image"]
 image_closed = image_closed["image"]
-image_cut = image_cut_before(image_BGR, image_masked)
-image_cut = image_cut["image"]
-image_blurred = create_image_blurred(image_cut)
+#image_cut = image_cut_before(image_BGR, image_masked)
+#image_cut = image_cut["image"]
+image_inpaint = create_inpainted_image(image_BGR, image_masked)
+image_inpaint = image_inpaint["image"]
+#image_blurred = create_image_blurred(image_cut)
+image_blurred = create_image_blurred(image_inpaint)
 image_blurred = image_blurred["image"]
 
 
@@ -113,6 +118,7 @@ image_array.append(create_original_image(image_BGR))
 #image_array.append(grabcut_image(image_RGB))
 #image_array.append(create_dilated_mask(image_masked))
 #image_array.append(image_merge(image_RGB,image_blurred,image_dilated))
+image_array.append(create_inpainted_image(image_RGB, image_masked))
 image_array.append(image_merge(image_RGB,image_blurred,image_closed))
 #image_array.append(image_cut_before(image_RGB, image_masked))
 
